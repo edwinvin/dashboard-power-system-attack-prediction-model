@@ -148,8 +148,12 @@ def explore_data(data):
             if not inf_cols.empty:
                 st.write("")
                 st.write("")
+                inf_df = pd.DataFrame()
+                inf_df['Feature'] = inf_cols.index
+                inf_df['Infinity Values'] = inf_cols.values
+                
                 st.write("Features with Infinity Values:")
-                chart_3 = alt.Chart(pd.DataFrame({'Feature': inf_cols.index, 'Infinity Values': inf_cols.values})).mark_bar().encode(
+                chart_3 = alt.Chart(inf_df).mark_bar().encode(
                 x='Feature',
                 y='Infinity Values',
                 tooltip=['Feature', 'Infinity Values']
