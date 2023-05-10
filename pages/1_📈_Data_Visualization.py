@@ -53,11 +53,8 @@ def target_variable(data):
     for column in data.select_dtypes(include=['object']):
         st.write("Target Feature: ", column)
         st.write('\nUnique Values for', column)
-        st.dataframe(data[column].value_counts(), use_container_width=True)
-        
-        target_data = data[column].value_counts().reset_index().rename(columns={column: 'count', 'index': column})
-        chart = alt.Chart(target_data).mark_bar().encode(x=alt.X(column, sort=alt.EncodingSortField(field='count', op='sum', order='descending')), y='count')
-        st.altair_chart(chart, use_container_width=True)
+        target_data = data[column].value_counts().reset_index().rename(columns={'index': column, column: 'count'})
+    st.dataframe(target_data, use_container_width=True)
 
 def feature_importance(X_train, y_train): 
     f_scores, p_values = f_classif(X_train, y_train)
