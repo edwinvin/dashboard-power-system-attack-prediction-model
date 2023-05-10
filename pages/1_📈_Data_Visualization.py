@@ -109,13 +109,6 @@ def explore_data(data):
 
             st.markdown("***")
             target_variable(data)
-            
-            target_v =  data['marker'].value_counts().rename_axis('marker').reset_index(name='count)
-            target_v.columns = ["marker", "count"]
-
-            chart_2 = alt.Chart(target_v).mark_bar().encode(x='marker', y='count')
-            st.altair_chart(chart_2, use_container_width=True)
-
 
     with col2:
         with st.expander("Power System Framework", expanded=True):
