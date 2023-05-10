@@ -65,7 +65,7 @@ def feature_importance(X_train, y_train):
 
     return features_df
 
-def explore_data(data):
+def explore_data(data, X_train, y_train):
     st.subheader("Dataset")
 
     with st.expander("Display Dataset Head"):
@@ -202,4 +202,4 @@ def explore_data(data):
                 st.altair_chart(chart_4, use_container_width=True)
 
 data, X_train, y_train = load_data()
-explore_data(data)
+explore_data(data, X_train, y_train)
