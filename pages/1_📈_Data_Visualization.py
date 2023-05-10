@@ -112,7 +112,7 @@ def explore_data(data):
 
     with col2:
         with st.expander("Power System Framework", expanded=True):
-            framework = Image.open('ps_framework.jpg')
+            framework = Image.open('ps_framework.JPG')
             st.write("")
             st.image(framework, caption="Power System Framework Configuration")
             st.write("")
