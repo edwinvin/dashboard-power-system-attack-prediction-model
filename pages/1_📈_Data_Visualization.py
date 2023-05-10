@@ -65,7 +65,7 @@ def feature_importance(X_train, y_train):
 
     return features_df
 
-def explore_data(data, X_train, y_train):
+def explore_data(data):
     st.subheader("Dataset")
 
     with st.expander("Display Dataset Head"):
@@ -109,10 +109,12 @@ def explore_data(data, X_train, y_train):
 
             st.markdown("***")
             target_variable(data)
+            
+            target_v =  data['marker'].value_counts().rename_axis('marker').reset_index(name='count)
+            target_v.columns = ["marker", "count"]
 
-            chart_2 = data['marker'].value_counts().reset_index().rename(columns={'index': 'marker', 'marker': 'count'})
-            chart = alt.Chart(chart_2).mark_bar().encode(x='marker', y='count')
-            st.altair_chart(chart, use_container_width=True)
+            chart_2 = alt.Chart(target_v).mark_bar().encode(x='marker', y='count')
+            st.altair_chart(chart_2, use_container_width=True)
 
 
     with col2:
@@ -202,4 +204,4 @@ def explore_data(data, X_train, y_train):
                 st.altair_chart(chart_4, use_container_width=True)
 
 data, X_train, y_train = load_data()
-explore_data(data, X_train, y_train)
+explore_data(data)
