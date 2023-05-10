@@ -1,0 +1,12 @@
+div[data-testid="stExpander"] div[role="button"] p {
+    font-size: 1.07rem;
+    font-weight: bold;
+}
+
+[data-testid="stVerticalBlock"] > [style*="flex-direction: column;"] > [data-testid="stVerticalBlock"] {
+    border-radius: 0.275rem;
+    border: 1px solid #3D4044;
+    padding: 1rem 1rem;
+    margin-bottom: 0.5rem;
+    line-height: 2.35;
+}
