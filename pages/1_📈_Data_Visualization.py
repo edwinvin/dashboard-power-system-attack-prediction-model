@@ -27,12 +27,9 @@ st.sidebar.markdown("Data Visualization module presents statistics and charts in
 @st.cache_data
 def load_data():
     data = pd.read_csv('raw_merged_df.csv')
-    with open('X_train.pkl', 'rb') as f:
-        X_train = pickle.load(f)
-
-    with open('y_train.pkl', 'rb') as f:
-        y_train = pickle.load(f)
-
+    X_train = pd.read_pickle('X_train.pkl')
+    y_train = pd.read_pickle('y_train.pkl')
+    
     progress_bar = st.progress(0)
     for i in range(1, 101):
         progress_bar.progress(i)
