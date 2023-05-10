@@ -53,7 +53,7 @@ def target_variable(data):
     for column in data.select_dtypes(include=['object']):
         st.write("Target Feature: ", column)
         st.write('\nUnique Values for', column)
-        st.dataframe(column, use_container_width=True)
+        st.dataframe(data[column].value_counts(), use_container_width=True)
 
 def feature_importance(X_train, y_train): 
     f_scores, p_values = f_classif(X_train, y_train)
