@@ -15,7 +15,7 @@ The Network Intrusion Detection Model is developed to provide classification of 
 through Machine Learning implementation of Logistic Regression Algorithm.
 
 #### Dataset Information
-- The Daatset is an open source simulated power system dataset provided by Mississippi State University Oak Ridge National 
+- The Dataset is an open source simulated power system dataset provided by Mississippi State University Oak Ridge National 
 Laboratories which contains three datasets that comprise measurements of the regular, disturbed, controlled, and cyberattack 
 behaviours of electric transmission systems whereby the collection contains measurements from relays, a simulated control panel, 
 synchrophasor measurements, and data logs from Snort.
