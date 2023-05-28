@@ -4,6 +4,7 @@ import numpy as np
 import altair as alt
 import pickle
 from sklearn.feature_selection import f_classif
+from sklearn.model_selection import train_test_split
 from PIL import Image
 import time
 
@@ -20,28 +21,70 @@ def local_css(file_name):
 local_css("style.css")
 
 st.markdown("# Data Visualization")
+st.subheader("Dataset")
 
 st.sidebar.header("Data Visualization")
 st.sidebar.markdown("Data Visualization module presents statistics and charts in relation to power system attack dataset.")
 
-@st.cache_data
-def load_data():
-    data = pd.read_csv('raw_merged_df.csv')
-    X_train = pd.read_pickle('X_train.pkl')
-    y_train = pd.read_pickle('y_train.pkl')
+
+def load_data(uploaded_file):
+    if uploaded_file is not None:
+        data = pd.read_csv(uploaded_file)
+        return data
+    else:
+        return None
     
-    progress_bar = st.progress(0)
-    for i in range(1, 101):
-        progress_bar.progress(i)
-        time.sleep(0.1)
+with open('features_list.pkl', 'rb') as file:
+    required_features = pickle.load(file)
+
+with st.expander("Upload Dataset",expanded=True):
+    st.write("")
+
+    with st.form("upload_form", clear_on_submit=True):
+        uploaded_file = st.file_uploader("Upload Dataset - CSV File", type="csv", help="Click Browse Files to upload the dataset in CSV file format.")
+        submit_button = st.form_submit_button(label="Upload")
+
+        if uploaded_file is not None and submit_button:
+            data = load_data(uploaded_file)
+            
+            if data is not None and set(required_features).issubset(data.columns):
+                st.session_state.data = data
+                st.session_state.file_name = uploaded_file.name
+                st.session_state.file_size = uploaded_file.size
+                st.success("Dataset File successfully uploaded.")
+            else:
+                st.error("The uploaded CSV file does not have the required features.")
     
-    progress_bar.empty()
-    return data, X_train, y_train
+    st.write("")
+
+
+reset_session = st.button("Clear Dataset")
+
+if reset_session:
+    st.session_state.data = None
+    st.session_state.file_name = None
+    st.session_state.file_size = None
+    uploaded_file = None
+
+if 'data' not in st.session_state:
+    st.session_state.data = None
+
+if 'file_name' not in st.session_state:
+    st.session_state.file_name = None
+
+if 'file_size' not in st.session_state:
+    st.session_state.file_size = None
+
+data = st.session_state.data
+file_name = st.session_state.file_name
+
+if st.session_state.file_size is not None:
+    file_size = st.session_state.file_size / (1024 * 1024)
 
 def get_feature_count(data):
     features = data.drop(columns=['marker']).columns.tolist()
     num_features = len(features)
-    st.write(f"Total Number of Features: ", num_features)
+    st.write(f"Total Number of Features Excluding Target Feature: ", num_features)
     return
 
 def display_features(data):
@@ -51,28 +94,33 @@ def display_features(data):
 
 def target_variable(data):
     for column in data.select_dtypes(include=['object']):
-        st.write("Target Feature: ", column)
-        st.write('\nUnique Values for', column)
+        st.write("Target Feature for the Dataset: ", column)
+        st.write('\nUnique Values for', column, ':')
         st.dataframe(data[column].value_counts(), use_container_width=True)
 
-def feature_importance(X_train, y_train): 
-    f_scores, p_values = f_classif(X_train, y_train)
-    X = data.drop("marker", axis=1)
-    y = data["marker"]
+def split_data(data):
+    new_data = data.replace([np.inf, -np.inf], np.nan).dropna()
+    X = new_data.drop("marker", axis=1)
+    y = new_data["marker"]
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+    return X, y, X_train, X_test, y_train, y_test
 
+def feature_importance(X_train, y_train, X): 
+    f_scores, p_values = f_classif(X_train, y_train)
     features_df = pd.DataFrame({'Feature': X.columns, 'F-Score': f_scores})
     features_df = features_df.sort_values('F-Score', ascending=False)
 
     return features_df
 
 def explore_data(data):
-    st.subheader("Dataset")
 
+    st.markdown("***")
+    st.subheader("Dataset Information & Statistics")
+    
     with st.expander("Display Dataset Head"):
         st.write("")
         st.write(data.head())
-    
-    st.subheader("Dataset Statistics")
+
     col1, col2 = st.columns(2)
 
     with col1:
@@ -81,7 +129,7 @@ def explore_data(data):
             st.write(f"Total Number of Data: ", data.shape[0])
 
             num_variables = len(data.columns)
-            st.write(f"Total Number of Variables: ", num_variables)
+            st.write(f"Total Number of Features: ", num_variables)
 
             get_feature_count(data)
 
@@ -92,10 +140,15 @@ def explore_data(data):
 
             st.write("")
             st.write("")
+            st.info("""Data types of features are the different ways that data can be represented. 
+                These categories can be used to describe the type of data, such as categorical or numerical.""", icon="ℹ️")
+            
+            st.write("")
+            st.write("")
             st.dataframe(data_types, use_container_width=True)
             st.write("")
             st.write("")
-            chart = alt.Chart(data_types.reset_index()).mark_bar().encode(x=alt.X('data_type', title='Data Type'), y=alt.Y('count', title='Number of Variables'))
+            chart = alt.Chart(data_types.reset_index()).mark_bar().encode(x=alt.X('data_type', title='Data Type'), y=alt.Y('count', title='Number of Features'))
             st.altair_chart(chart, use_container_width=True)
 
         with st.expander("Features",expanded=True):
@@ -103,11 +156,18 @@ def explore_data(data):
             display_features(data)
             st.markdown("***")
 
-            st.write("Features Explanation: ")
+            st.write("**Features Explanation:**")
             feature_table = Image.open('feature_table.png')
             st.image(feature_table, caption="Features Explanation")
 
             st.markdown("***")
+            
+            st.write("**Target Feature:**")
+            st.info("""The target feature is the variable that user want to predict or explain in a dataset. 
+                It is the outcome or response variable of interest in a machine learning or statistical analysis task.""", icon="ℹ️")
+
+            st.write("")
+            st.write("")
             target_variable(data)
             
             target_feature = 'marker'
@@ -137,6 +197,10 @@ def explore_data(data):
         
         with st.expander("Missing Values & Infinity Values", expanded=True):
             st.write("")
+            st.info("""Missing values are data points that are not present in the dataset. 
+            Infinity values are data points that are larger or smaller than any possible value.""", icon="ℹ️")
+            st.write("")
+            
             total_missing = data.isnull().sum().sum()
             st.write(f"Total Number of Missing Values: ", total_missing)
 
@@ -167,9 +231,18 @@ def explore_data(data):
 
         with st.expander("Feature Importance", expanded=True):
             st.write("")
+            st.info("""Feature importance is the process used in assigning scores to features in the dataset to indicate how important they are for predicting the target variable. 
+            This method is used to select the most important features for the machine learning model.""", icon="ℹ️")
+            st.write("")
             st.write("Features Ranked based on ANOVA F-value.")
+
+            st.info("""ANOVA F-value feature selection method is used  as a statistical method which uses the F-statistic to select 
+            features that are most likely to be important for the machine learning model.""", icon="ℹ️")
+            st.write("")
+
+            X, y, X_train, X_test, y_train, y_test = split_data(data)
             
-            features_df = feature_importance(X_train, y_train)
+            features_df = feature_importance(X_train, y_train, X)
 
             num_features = st.selectbox("Chart Display Options", options=["Top 10 Features", "All Features", "All Features Ranked"], index=0)
 
@@ -204,5 +277,7 @@ def explore_data(data):
 
                 st.altair_chart(chart_4, use_container_width=True)
 
-data, X_train, y_train = load_data()
-explore_data(data)
+if data is not None:
+    st.info(f"""**Current Loaded Dataset:** \n\n File Name: {file_name} \n\n File Size: {file_size:.2f} MB""", icon="ℹ️")
+    
+    explore_data(data)
